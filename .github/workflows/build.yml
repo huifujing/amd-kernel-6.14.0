@@ -45,7 +45,7 @@ jobs:
           make -j$(nproc) deb-pkg
           
       - name: Upload Debian packages
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-pages-artifact@v3
         with:
           name: kernel-debs
           path: |
@@ -56,7 +56,7 @@ jobs:
           ls -la *.deb > package-info.txt
           
       - name: Upload package info
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-pages-artifact@v3
         with:
           name: package-info
           path: package-info.txt
