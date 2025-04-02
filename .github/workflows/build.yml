@@ -65,9 +65,22 @@ jobs:
           # 使用skipdbg参数避免生成调试包
           make -j$(nproc) bindeb-pkg LOCALVERSION= KDEB_PKGVERSION=$(date +%Y%m%d)-1 skipdbg=true
           
+      - name: Find and list Debian packages
+        run: |
+          # 查找并显示所有生成的.deb文件
+          find . -name "*.deb" -type f
+          
       - name: Upload Debian packages
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-artifact@v3
         with:
           name: kernel-debs
           path: |
-            linux-*.deb
+            ./*.deb
+            
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+        
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./*.deb
