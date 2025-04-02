@@ -34,7 +34,8 @@ jobs:
     - name: Compile the kernel
       run: |
         cd /usr/src/linux-6.14
-        wget https://github.com/huifujing/amd-kernel-6.14.0/blob/main/config-6.1.0-32-amd64
+        sudo chmod 777 /usr/src/linux-6.14
+        sudo wget https://github.com/huifujing/amd-kernel-6.14.0/blob/main/config-6.1.0-32-amd64 -O /usr/src/linux-6.14/config-6.1.0-32-amd64
         sudo make oldconfig -y
         sudo make -j$(nproc) deb-pkg
 
