@@ -1,45 +1,62 @@
-name: Compile Kernel
+name: Build Linux Kernel Debian Package
+
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:  # Manually trigger the workflow
+  schedule:
+    - cron: '0 0 * * 0'  # Run weekly on Sunday at midnight UTC
+
 jobs:
-  build:
+  build-kernel:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      
-    - name: Update and install dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y wget curl gnupg2 
-        sudo apt update && sudo apt upgrade -y
-        sudo apt install -y build-essential libncurses-dev bison flex libssl-dev libelf-dev bc dwarves
-        sudo apt install -y git python3
-        sudo apt-get install build-essential libncurses5-dev bison flex libssl-dev libelf-dev bc
-        sudo apt install -y sudo wget curl nload screen nftables cron expect zip snapd
-        sudo apt install -y debhelper rsync
-        
-    - name: Clone latest kernel source code
-      run: |
-        cd /usr/src
-        sudo git clone --depth=1 https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git linux-6.14
-        
-    - name: Compile the kernel
-      run: |
-        cd /usr/src/linux-6.14
-        sudo chmod 777 /usr/src/linux-6.14
-        sudo wget https://raw.githubusercontent.com/huifujing/amd-kernel-6.14.0/main/config-6.1.0-32-amd64 -O /usr/src/linux-6.14/config-6.1.0-32-amd64
-        printf "\n" | sudo make oldconfig
-        sudo make -j$(nproc) deb-pkg
-        
-    - name: Upload the artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: kernel-debs
-        path: /usr/src/*.deb
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential flex bison libssl-dev libelf-dev bc lz4 rsync curl wget git fakeroot debhelper
+
+      - name: Download kernel config file
+        run: |
+          mkdir -p kernel-build
+          cd kernel-build
+          wget -O .config https://raw.githubusercontent.com/huifujing/amd-kernel-6.14.0/main/config-6.1.0-32-amd64
+          if [ $? -ne 0 ]; then
+            echo "Failed to download config file"
+            exit 1
+          fi
+
+      - name: Clone Linux kernel repository
+        run: |
+          git clone --depth=1 https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git linux-6.14
+          if [ $? -ne 0 ]; then
+            echo "Failed to clone kernel repository"
+            exit 1
+          fi
+
+      - name: Prepare build environment
+        run: |
+          cp kernel-build/.config linux-6.14/
+          cd linux-6.14
+          make olddefconfig
+
+      - name: Build kernel Debian packages
+        run: |
+          cd linux-6.14
+          make -j$(nproc) deb-pkg
+          
+      - name: Upload Debian packages
+        uses: actions/upload-artifact@v3
+        with:
+          name: kernel-debs
+          path: |
+            linux-*.deb
+            
+      - name: Generate package info
+        run: |
+          ls -la *.deb > package-info.txt
+          
+      - name: Upload package info
+        uses: actions/upload-artifact@v3
+        with:
+          name: package-info
+          path: package-info.txt
