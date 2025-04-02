@@ -10,6 +10,20 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - name: Free up disk space
+        run: |
+          # 删除不必要的大型文件和目录
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          # 删除 Android SDK
+          sudo rm -rf /usr/local/lib/android
+          # 清理 apt 缓存
+          sudo apt-get clean
+          # 查看空间状况
+          df -h
+
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -37,26 +51,23 @@ jobs:
         run: |
           cp kernel-build/.config linux-6.14/
           cd linux-6.14
+          # 禁用调试信息以减少构建大小
+          sed -i 's/CONFIG_DEBUG_INFO=y/CONFIG_DEBUG_INFO=n/' .config
+          sed -i 's/CONFIG_DEBUG_INFO_DWARF4=y/CONFIG_DEBUG_INFO_DWARF4=n/' .config
+          sed -i 's/CONFIG_DEBUG_INFO_BTF=y/CONFIG_DEBUG_INFO_BTF=n/' .config
+          # 禁用一些不必要的模块
+          echo "CONFIG_DEBUG_INFO_REDUCED=y" >> .config
           make olddefconfig
 
-      - name: Build kernel Debian packages
+      - name: Build kernel packages without debug package
         run: |
           cd linux-6.14
-          make -j$(nproc) deb-pkg
+          # 使用skipdbg参数避免生成调试包
+          make -j$(nproc) bindeb-pkg LOCALVERSION= KDEB_PKGVERSION=$(date +%Y%m%d)-1 skipdbg=true
           
       - name: Upload Debian packages
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-artifact@v3
         with:
           name: kernel-debs
           path: |
             linux-*.deb
-            
-      - name: Generate package info
-        run: |
-          ls -la *.deb > package-info.txt
-          
-      - name: Upload package info
-        uses: actions/upload-pages-artifact@v3
-        with:
-          name: package-info
-          path: package-info.txt
