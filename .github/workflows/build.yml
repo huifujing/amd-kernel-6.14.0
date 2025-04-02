@@ -8,6 +8,11 @@ on:
 jobs:
   build-kernel:
     runs-on: ubuntu-latest
+    # 添加权限，允许Pages部署
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     
     steps:
       - name: Free up disk space
@@ -69,18 +74,26 @@ jobs:
         run: |
           # 查找并显示所有生成的.deb文件
           find . -name "*.deb" -type f
+          # 创建一个目录存放所有的deb文件
+          mkdir -p ./artifacts
+          # 复制所有的deb文件到artifacts目录
+          find . -name "*.deb" -type f -exec cp {} ./artifacts/ \;
+          ls -la ./artifacts/
           
-      - name: Upload Debian packages
+      - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
           name: kernel-debs
-          path: |
-            ./*.deb
-            
+          path: ./artifacts/*.deb
+          
       - name: Setup Pages
         uses: actions/configure-pages@v4
         
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./*.deb
+          path: ./artifacts
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
