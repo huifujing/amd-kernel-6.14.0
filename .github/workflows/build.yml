@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main  # 或者你使用的分支名称
-  pull_request:
-    branches:
-      - main  # 或者你使用的分支名称
 
 jobs:
   build:
@@ -19,7 +16,6 @@ jobs:
     - name: Install Dependencies
       run: |
         sudo apt update
-        sudo apt install -y wget curl gnupg2
         sudo apt install -y build-essential libncurses-dev bison flex libssl-dev libelf-dev bc dwarves
         sudo apt install -y git python3
         sudo apt install debhelper rsync
@@ -45,14 +41,8 @@ jobs:
         cd /usr/src/linux-6.14
         make -j$(nproc) deb-pkg
 
-    - name: Install Kernel Package
-      run: |
-        cd /usr/src/linux-6.14
-        sudo dpkg -i ../linux-image-6.14.0+_6.14.0-g4e82c87058f4-2_amd64.deb
-        sudo apt-get install -f
-
     - name: Upload Kernel Build Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v2  # Use v2 instead of v3
       with:
         name: kernel-deb
         path: |
