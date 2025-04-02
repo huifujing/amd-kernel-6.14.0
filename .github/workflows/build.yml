@@ -4,7 +4,8 @@ on:
   workflow_dispatch:  # 手动触发工作流
   push:
     branches: [ main ]  # 在推送到 main 分支时自动运行
-
+  schedule:
+    - cron: '0 16 * * *' # UTC 时间每天 16:00 运行，对应北京时间 00:00
 jobs:
   build-kernel:
     runs-on: ubuntu-latest
