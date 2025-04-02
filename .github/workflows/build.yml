@@ -45,7 +45,7 @@ jobs:
         sudo make -j$(nproc) deb-pkg
 
     - name: Upload the artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: kernel-debs
         path: /usr/src/*.deb
