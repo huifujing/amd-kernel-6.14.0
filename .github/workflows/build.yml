@@ -1,9 +1,9 @@
 name: Build Linux Kernel Debian Package
 
 on:
-  workflow_dispatch:  # Manually trigger the workflow
-  schedule:
-    - cron: '0 0 * * 0'  # Run weekly on Sunday at midnight UTC
+  workflow_dispatch:  # 手动触发工作流
+  push:
+    branches: [ main ]  # 在推送到 main 分支时自动运行
 
 jobs:
   build-kernel:
