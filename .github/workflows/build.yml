@@ -1,0 +1,59 @@
+name: Build Linux Kernel 6.14
+
+on:
+  push:
+    branches:
+      - main  # 或者你使用的分支名称
+  pull_request:
+    branches:
+      - main  # 或者你使用的分支名称
+
+jobs:
+  build:
+    runs-on: ubuntu-latest  # 使用 GitHub 提供的最新 Ubuntu 镜像
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Install Dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y wget curl gnupg2
+        sudo apt install -y build-essential libncurses-dev bison flex libssl-dev libelf-dev bc dwarves
+        sudo apt install -y git python3
+        sudo apt install debhelper rsync
+
+    - name: Clone Linux Kernel Source
+      run: |
+        # 删除当前的源代码目录
+        rm -rf /usr/src/linux-6.14
+        cd /usr/src
+        git clone --depth=1 https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git linux-6.14
+
+    - name: Copy Existing Configuration (from boot config)
+      run: |
+        cp -v /boot/config-6.1.0-32-amd64 /usr/src/linux-6.14/.config
+
+    - name: Make Oldconfig
+      run: |
+        cd /usr/src/linux-6.14
+        make oldconfig
+
+    - name: Build Kernel
+      run: |
+        cd /usr/src/linux-6.14
+        make -j$(nproc) deb-pkg
+
+    - name: Install Kernel Package
+      run: |
+        cd /usr/src/linux-6.14
+        sudo dpkg -i ../linux-image-6.14.0+_6.14.0-g4e82c87058f4-2_amd64.deb
+        sudo apt-get install -f
+
+    - name: Upload Kernel Build Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: kernel-deb
+        path: |
+          /usr/src/linux-6.14/../*.deb
