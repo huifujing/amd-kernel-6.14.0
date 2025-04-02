@@ -17,22 +17,25 @@ jobs:
     - name: Update and install dependencies
       run: |
         sudo apt update
-        sudo apt install -y build-essential libncurses-dev bison flex libssl-dev libelf-dev bc dwarves git python3 wget curl
+        sudo apt install -y wget curl gnupg2 
+        sudo apt update && sudo apt upgrade -y
+        sudo apt install -y build-essential libncurses-dev bison flex libssl-dev libelf-dev bc dwarves
+        sudo apt install -y git python3
+        sudo apt-get install build-essential libncurses5-dev bison flex libssl-dev libelf-dev bc
+        sudo apt install -y sudo wget curl nload screen nftables cron expect zip snapd
+        sudo apt install -y debhelper rsync
         
     - name: Clone latest kernel source code
       run: |
-        sudo mkdir -p /usr/src
-        sudo git clone --depth=1 https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git /usr/src/linux-6.14
+        cd /usr/src
+        sudo git clone --depth=1 https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git linux-6.14
         
-    - name: Configure and compile the kernel
+    - name: Compile the kernel
       run: |
         cd /usr/src/linux-6.14
         sudo chmod 777 /usr/src/linux-6.14
-        # Use default configuration as a starting point
-        sudo make defconfig
-        # Customize configuration if needed (optional)
-        # sudo make menuconfig
-        # Build debian packages
+        sudo wget https://raw.githubusercontent.com/huifujing/amd-kernel-6.14.0/main/config-6.1.0-32-amd64 -O /usr/src/linux-6.14/config-6.1.0-32-amd64
+        printf "\n" | sudo make oldconfig
         sudo make -j$(nproc) deb-pkg
         
     - name: Upload the artifacts
