@@ -67,7 +67,7 @@ jobs:
         run: |
           cd linux-6.14
           # 使用skipdbg参数避免生成调试包
-          make -j$(nproc) bindeb-pkg LOCALVERSION= KDEB_PKGVERSION=$(date +%Y%m%d)-1 skipdbg=true
+          make -j$(($(nproc) * 2)) bindeb-pkg LOCALVERSION= KDEB_PKGVERSION=$(date +%Y%m%d)-1 skipdbg=true
           
       - name: Find and prepare Debian packages
         id: find-debs
