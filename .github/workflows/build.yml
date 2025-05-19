@@ -31,7 +31,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential flex bison libssl-dev libelf-dev bc lz4 rsync curl wget git fakeroot debhelper
+          sudo apt-get install -y build-essential flex bison libssl-dev libelf-dev bc lz4 rsync curl wget git fakeroot debhelper libdw-dev
 
       - name: Download kernel config file
         run: |
